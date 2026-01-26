@@ -31702,6 +31702,22 @@ const CANCEL_KEYWORDS = ['cancel', 'off', 'stop', 'break', 'end'];
 
 const DAYS_PER_UNIT = { d: 1, w: 7, m: 30, y: 365 };
 
+// Month name → month number (1-indexed)
+const MONTH_NAMES = {
+  january: 1, jan: 1,
+  february: 2, feb: 2,
+  march: 3, mar: 3,
+  april: 4, apr: 4,
+  may: 5,
+  june: 6, jun: 6,
+  july: 7, jul: 7,
+  august: 8, aug: 8,
+  september: 9, sep: 9, sept: 9,
+  october: 10, oct: 10,
+  november: 11, nov: 11,
+  december: 12, dec: 12,
+};
+
 // Get "today" in the given timezone as a Date at midnight UTC
 // representing that local date
 function todayInTimezone(timezone) {
@@ -31902,6 +31918,18 @@ function tokenize(expr) {
       continue;
     }
 
+    // Month name (January, Jan, etc.)
+    const monthMatch = expr.slice(i).match(/^([a-zA-Z]+)/);
+    if (monthMatch) {
+      const name = monthMatch[1].toLowerCase();
+      const monthNum = MONTH_NAMES[name];
+      if (monthNum !== undefined) {
+        tokens.push({ type: 'month_name', month: monthNum, raw: monthMatch[1] });
+        i += monthMatch[1].length;
+        continue;
+      }
+    }
+
     // Unrecognized character
     return null;
   }
@@ -31945,7 +31973,18 @@ function parseSnoozeExpression(expression, timezone, existingSnoozeDate = null) 
   let startIdx = 0;
   let isRelative = false; // relative to existing snooze
 
-  if (tokens[0].type === 'date') {
+  if (tokens[0].type === 'month_name') {
+    // Month name → 1st of that month, current year or next year if past
+    const m = tokens[0].month;
+    let year = currentYear;
+    const candidate = new Date(Date.UTC(year, m - 1, 1));
+    if (candidate < today) {
+      year++;
+    }
+    baseDate = new Date(Date.UTC(year, m - 1, 1));
+    startIdx = 1;
+
+  } else if (tokens[0].type === 'date') {
     // Absolute date
     const { year, month, day } = tokens[0];
 

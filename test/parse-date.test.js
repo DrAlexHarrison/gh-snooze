@@ -465,6 +465,109 @@ describe('parse-date', () => {
     });
   });
 
+  // ── Month names ──
+  describe('month names', () => {
+    // Frozen date: 2026-06-15
+
+    it('"July" → July 1 current year (future month)', () => {
+      const r = parse('July');
+      expect(r.type).toBe('snooze');
+      expect(r.date).toBe('2026-07-01');
+    });
+
+    it('"july" → case insensitive', () => {
+      const r = parse('july');
+      expect(r.type).toBe('snooze');
+      expect(r.date).toBe('2026-07-01');
+    });
+
+    it('"JULY" → case insensitive', () => {
+      const r = parse('JULY');
+      expect(r.type).toBe('snooze');
+      expect(r.date).toBe('2026-07-01');
+    });
+
+    it('"Jul" → abbreviation', () => {
+      const r = parse('Jul');
+      expect(r.type).toBe('snooze');
+      expect(r.date).toBe('2026-07-01');
+    });
+
+    it('"December" → Dec 1 current year (future month)', () => {
+      const r = parse('December');
+      expect(r.type).toBe('snooze');
+      expect(r.date).toBe('2026-12-01');
+    });
+
+    it('"Dec" → abbreviation', () => {
+      const r = parse('Dec');
+      expect(r.type).toBe('snooze');
+      expect(r.date).toBe('2026-12-01');
+    });
+
+    it('"January" → Jan 1 NEXT year (past month)', () => {
+      const r = parse('January');
+      expect(r.type).toBe('snooze');
+      expect(r.date).toBe('2027-01-01');
+    });
+
+    it('"Jan" → abbreviation, next year', () => {
+      const r = parse('Jan');
+      expect(r.type).toBe('snooze');
+      expect(r.date).toBe('2027-01-01');
+    });
+
+    it('"March" → March 1 next year (past month)', () => {
+      const r = parse('March');
+      expect(r.type).toBe('snooze');
+      expect(r.date).toBe('2027-03-01');
+    });
+
+    it('"June" → June 1 next year (current month, June 1 is past)', () => {
+      // Today is June 15, so June 1 is in the past → rolls to next year
+      const r = parse('June');
+      expect(r.type).toBe('snooze');
+      expect(r.date).toBe('2027-06-01');
+    });
+
+    it('"sept" → September 1 current year', () => {
+      const r = parse('sept');
+      expect(r.type).toBe('snooze');
+      expect(r.date).toBe('2026-09-01');
+    });
+
+    it('"September" → September 1 current year', () => {
+      const r = parse('September');
+      expect(r.type).toBe('snooze');
+      expect(r.date).toBe('2026-09-01');
+    });
+
+    it('"May" → May 1 next year (past month)', () => {
+      const r = parse('May');
+      expect(r.type).toBe('snooze');
+      expect(r.date).toBe('2027-05-01');
+    });
+
+    // Month name + adjustment
+    it('"July+15d" → July 1 + 15 days = July 16', () => {
+      const r = parse('July+15d');
+      expect(r.type).toBe('snooze');
+      expect(r.date).toBe('2026-07-16');
+    });
+
+    it('"January+2w" → Jan 1 2027 + 14 days = Jan 15 2027', () => {
+      const r = parse('January+2w');
+      expect(r.type).toBe('snooze');
+      expect(r.date).toBe('2027-01-15');
+    });
+
+    it('"Oct-1w" → Oct 1 2026 - 7 days = Sep 24 2026', () => {
+      const r = parse('Oct-1w');
+      expect(r.type).toBe('snooze');
+      expect(r.date).toBe('2026-09-24');
+    });
+  });
+
   // ── Worked examples from plan ──
   describe('worked examples from plan', () => {
     it('"" → 2026-06-22', () => {
