@@ -66,7 +66,7 @@ async function ensureLabel(octokit, owner, repo) {
 function buildSnoozeComment(result, existingDate) {
   if (existingDate) {
     return [
-      `🔕 **Snooze updated to ${result.dateHuman}** (${result.date} MST)`,
+      `🔕 **Snooze updated to ${result.dateHuman}** (${result.date})`,
       '',
       `_Previous snooze: ${existingDate}_`,
       '',
@@ -74,7 +74,7 @@ function buildSnoozeComment(result, existingDate) {
     ].join('\n');
   }
   return [
-    `🔕 **Snoozed until ${result.dateHuman}** (${result.date} MST)`,
+    `🔕 **Snoozed until ${result.dateHuman}** (${result.date})`,
     '',
     `<!-- snooze-until: ${result.date} -->`,
   ].join('\n');
