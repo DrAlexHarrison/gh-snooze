@@ -1,0 +1,22 @@
+{
+  "name": "gh-snooze",
+  "version": "1.0.0",
+  "description": "GitHub issue snooze system — snooze issues until a future date",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "build": "ncc build src/index.js -o dist"
+  },
+  "keywords": ["github-action", "issues", "snooze"],
+  "author": "DrAlexHarrison",
+  "license": "MIT",
+  "dependencies": {
+    "@actions/core": "^1.11.1",
+    "@actions/github": "^6.0.0"
+  },
+  "devDependencies": {
+    "@vercel/ncc": "^0.38.3",
+    "vitest": "^3.0.4"
+  }
+}

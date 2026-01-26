@@ -1,0 +1,10 @@
+name: 'GitHub Issue Snooze'
+description: 'Snooze GitHub issues until a future date'
+inputs:
+  timezone:
+    description: 'IANA timezone for date calculations'
+    required: false
+    default: 'America/Phoenix'
+runs:
+  using: 'node20'
+  main: 'dist/index.js'
