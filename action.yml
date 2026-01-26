@@ -5,6 +5,10 @@ inputs:
     description: 'IANA timezone for date calculations'
     required: false
     default: 'America/Phoenix'
+  github-token:
+    description: 'GitHub token for API access'
+    required: false
+    default: ${{ github.token }}
 runs:
   using: 'node20'
   main: 'dist/index.js'

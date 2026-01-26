@@ -32368,7 +32368,7 @@ async function handleIssueClosed(octokit, owner, repo, issueNumber, labels) {
 
 async function run() {
   try {
-    const token = process.env.GITHUB_TOKEN || core.getInput('github-token');
+    const token = core.getInput('github-token') || process.env.GITHUB_TOKEN;
     const timezone = core.getInput('timezone') || 'America/Phoenix';
     const octokit = github.getOctokit(token);
 
