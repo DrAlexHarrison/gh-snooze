@@ -22,7 +22,7 @@
   },
   "devDependencies": {
     "@vercel/ncc": "^0.38.3",
-    "vitest": "^3.0.4"
+    "vitest": "^4.1.0"
   },
   "overrides": {
     "undici": "^6.26.0"
