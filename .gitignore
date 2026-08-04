@@ -1,1 +1,4 @@
 node_modules/
+
+# Meta folder (commit plans, ephemeral)
+meta/
