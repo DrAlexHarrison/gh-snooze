@@ -25,6 +25,16 @@ permissions:
 
 jobs:
   snooze:
+    # Run only for events this action acts on: text with "snooze:" (matched case-insensitively,
+    # like contains()), the `snoozed` label removed, or a snoozed issue closed. Every issue and PR
+    # comment fires issue_comment; without this, each one starts a runner to find nothing.
+    if: >-
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, 'snooze:'))
+      || (github.event_name == 'issues'
+          && (((github.event.action == 'opened' || github.event.action == 'edited')
+               && contains(github.event.issue.body, 'snooze:'))
+              || (github.event.action == 'unlabeled' && github.event.label.name == 'snoozed')
+              || (github.event.action == 'closed' && contains(github.event.issue.labels.*.name, 'snoozed'))))
     runs-on: ubuntu-latest
     steps:
       - uses: DrAlexHarrison/gh-snooze@v1
