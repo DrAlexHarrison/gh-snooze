@@ -7,21 +7,12 @@ import { unsnoozeRepo } from './unsnooze.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-async function main() {
-  const token = process.env.GITHUB_TOKEN;
-  if (!token) {
-    console.error('GITHUB_TOKEN environment variable is required');
-    process.exit(1);
-  }
-
-  const timezone = process.env.TIMEZONE || 'America/Phoenix';
-
-  // Read repos.json from repo root (one level up from src/)
-  const reposPath = resolve(__dirname, '..', 'repos.json');
-  const repos = JSON.parse(readFileSync(reposPath, 'utf-8'));
-
-  const octokit = new Octokit({ auth: token });
-
+/**
+ * Run the wake-up scan over every repo. One failing repo is logged and
+ * does not stop the rest.
+ * @returns {{ processed: number, woken: number, skipped: number }} totals
+ */
+export async function runCron(octokit, repos, timezone) {
   console.log(`Unsnooze cron starting — ${repos.length} repos, timezone: ${timezone}`);
   console.log('---');
 
@@ -44,9 +35,33 @@ async function main() {
 
   console.log('\n---');
   console.log(`Done. Total: processed ${totalProcessed}, woke ${totalWoken}, skipped ${totalSkipped}`);
+
+  return { processed: totalProcessed, woken: totalWoken, skipped: totalSkipped };
 }
 
-main().catch(err => {
-  console.error('Fatal error:', err);
-  process.exit(1);
-});
+export async function main() {
+  const token = process.env.GITHUB_TOKEN;
+  if (!token) {
+    console.error('GITHUB_TOKEN environment variable is required');
+    process.exit(1);
+  }
+
+  const timezone = process.env.TIMEZONE || 'America/Phoenix';
+
+  // Read repos.json from repo root (one level up from src/)
+  const reposPath = resolve(__dirname, '..', 'repos.json');
+  const repos = JSON.parse(readFileSync(reposPath, 'utf-8'));
+
+  const octokit = new Octokit({ auth: token });
+
+  await runCron(octokit, repos, timezone);
+}
+
+// Run only when invoked as a script, so tests can import runCron and main
+// without starting a live scan.
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main().catch(err => {
+    console.error('Fatal error:', err);
+    process.exit(1);
+  });
+}

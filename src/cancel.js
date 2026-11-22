@@ -1,17 +1,17 @@
 // Cancel handler: label removal and issue close events
-import { BOT_LOGIN, LABEL_NAME, MACHINE_DATE_REGEX } from './snooze.js';
+import { BOT_LOGIN, LABEL_NAME, findSnoozeDateInComments } from './snooze.js';
 
 // Check if the action itself recently posted a comment (within 60s)
 // to prevent loops when action removes label → triggers unlabeled event
 async function isRecentBotAction(octokit, owner, repo, issueNumber) {
-  const { data: comments } = await octokit.rest.issues.listComments({
-    owner, repo, issue_number: issueNumber,
-    per_page: 5,
-    direction: 'desc',
-  });
+  // Paginate every comment and sort here. Fetching only the first page
+  // would inspect the oldest comments on issues with long histories,
+  // since the API returns comments oldest first.
+  const comments = await octokit.paginate(
+    octokit.rest.issues.listComments,
+    { owner, repo, issue_number: issueNumber, per_page: 100 },
+  );
 
-  // Note: GitHub API returns comments in ascending order even with direction desc
-  // for listComments. We reverse to check most recent first.
   const sorted = [...comments].sort(
     (a, b) => new Date(b.created_at) - new Date(a.created_at)
   );
@@ -42,13 +42,7 @@ async function findLastSnoozeDate(octokit, owner, repo, issueNumber) {
     { owner, repo, issue_number: issueNumber, per_page: 100 },
   );
 
-  for (let i = comments.length - 1; i >= 0; i--) {
-    const comment = comments[i];
-    if (comment.user?.login !== BOT_LOGIN) continue;
-    const match = comment.body?.match(MACHINE_DATE_REGEX);
-    if (match) return match[1];
-  }
-  return null;
+  return findSnoozeDateInComments(comments);
 }
 
 /**

@@ -30,22 +30,31 @@ export function findSnoozeExpression(text) {
   return matches[matches.length - 1][1];
 }
 
+// Find the current snooze date from bot comments, newest first.
+// A cancellation or wake-up comment ends the snooze, so an older machine
+// date behind it no longer counts and the result is null.
+export function findSnoozeDateInComments(comments) {
+  for (let i = comments.length - 1; i >= 0; i--) {
+    const comment = comments[i];
+    if (comment.user?.login !== BOT_LOGIN) continue;
+    const body = comment.body || '';
+    if (body.includes('Snooze cancelled') || body.includes('Snooze ended')) {
+      return null;
+    }
+    const match = body.match(MACHINE_DATE_REGEX);
+    if (match) return match[1];
+  }
+  return null;
+}
+
 // Find existing snooze date from bot comments
 export async function findExistingSnoozeDate(octokit, owner, repo, issueNumber) {
-  // Fetch comments in reverse order (newest first)
   const comments = await octokit.paginate(
     octokit.rest.issues.listComments,
     { owner, repo, issue_number: issueNumber, per_page: 100 },
   );
 
-  // Walk backwards to find the most recent bot comment with machine date
-  for (let i = comments.length - 1; i >= 0; i--) {
-    const comment = comments[i];
-    if (comment.user?.login !== BOT_LOGIN) continue;
-    const match = comment.body?.match(MACHINE_DATE_REGEX);
-    if (match) return match[1];
-  }
-  return null;
+  return findSnoozeDateInComments(comments);
 }
 
 // Ensure the snoozed label exists in the repo

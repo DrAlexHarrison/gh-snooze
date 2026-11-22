@@ -14,16 +14,21 @@ async function run() {
     const { owner, repo } = github.context.repo;
 
     if (eventName === 'issue_comment') {
-      // Comment created or edited
-      const issue = payload.issue;
-      const comment = payload.comment;
+      // Comment created or edited. Other actions (for example a deleted
+      // comment) must not apply the text they carried.
+      if (payload.action === 'created' || payload.action === 'edited') {
+        const issue = payload.issue;
+        const comment = payload.comment;
 
-      await handleSnooze(octokit, {
-        owner, repo,
-        issueNumber: issue.number,
-        body: comment.body,
-        actorLogin: comment.user?.login,
-      }, timezone);
+        await handleSnooze(octokit, {
+          owner, repo,
+          issueNumber: issue.number,
+          body: comment.body,
+          // The actor is whoever triggered this event (the editor of an
+          // edited comment), not necessarily the original author.
+          actorLogin: payload.sender?.login ?? comment.user?.login,
+        }, timezone);
+      }
 
     } else if (eventName === 'issues') {
       const issue = payload.issue;
@@ -35,7 +40,10 @@ async function run() {
           owner, repo,
           issueNumber: issue.number,
           body: issue.body,
-          actorLogin: issue.user?.login,
+          // The actor is whoever triggered this event (the editor), not
+          // the issue author. Crediting the author would mistake a human
+          // edit of a bot-opened issue for a bot action and drop it.
+          actorLogin: payload.sender?.login ?? issue.user?.login,
         }, timezone);
 
       } else if (action === 'unlabeled') {
